@@ -95,7 +95,7 @@ scripts/sync-upstream.sh --status          # 领先/落后多少、备份点
 git reset --hard refs/upstream-backup/<备份点>   # 回滚到同步前
 ```
 
-其它 agent 的入口文件都指向同一条契约，换工具不用重新讲规则：`CLAUDE.md`、`GEMINI.md`、`QWEN.md`、`CONVENTIONS.md`（aider）、`.windsurfrules`、`.clinerules`、`.junie/guidelines.md`、`.github/copilot-instructions.md`、`.cursor/rules/upstream-sync.mdc`。契约正文只存在一处：`scripts/sync-upstream.sh --agent-brief`。
+规则只有这一份（本小节）+ 脚本里的 `--agent-brief` 契约，不另设 CLAUDE.md / .cursor 之类的多份副本；换工具时把本文件读进去即可。
 
 首次迁移（把工作区改动切成提交）用 `--bootstrap`；冲突解法、降摩擦写法、fork 模型细节见 [docs/upstream-sync.md](docs/upstream-sync.md)。同步后先 `node tests/run.mjs --offline`（需 `npx playwright install chromium`）再 `npm start` 手点本地引擎与添加器；部署仍在 `local` 分支上跑 `npm run deploy`（脚本已显式带 `--branch main`）。
 

@@ -8,7 +8,7 @@
 scripts/sync-upstream.sh --agent-brief
 ```
 
-契约正文只维护在脚本里（`--agent-brief` 的 heredoc），仓库里各 agent 的规则文件都是同一段短指针：`CLAUDE.md`、`GEMINI.md`、`QWEN.md`、`CONVENTIONS.md`（aider）、`.windsurfrules`、`.clinerules`、`.junie/guidelines.md`、`.github/copilot-instructions.md`、`.cursor/rules/upstream-sync.mdc`，再加上本文件的 `AGENTS.md` 小节。所以流程要改时只改脚本和这里，别去九个文件里各改一遍。
+规则只维护在两处：`AGENTS.md` 的「上游同步」小节（人读）+ 脚本的 `--agent-brief`（机读契约）。不再复制到 CLAUDE.md / .cursor / .windsurfrules 等文件——多份副本只会各自过期，换 agent 时让它读 AGENTS.md 就行。
 
 ## 远端与分支分工（硬约定）
 
