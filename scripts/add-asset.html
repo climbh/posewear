@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>衣姿 · 素材添加</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        --red: #ff2442;
+        --ink: #16181d;
+        --mute: #74787f;
+        --line: #e8eaee;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          14px/1.6 -apple-system,
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        color: var(--ink);
+        background: #fff;
+      }
+      header {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        padding: 20px 28px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+      header h1 {
+        margin: 0;
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+      header span {
+        color: var(--mute);
+        font-size: 12px;
+      }
+      main {
+        display: grid;
+        grid-template-columns: 168px minmax(0, 1fr);
+        gap: 0;
+        min-height: calc(100vh - 60px);
+      }
+      nav {
+        border-right: 1px solid var(--line);
+        padding: 12px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      nav button {
+        text-align: left;
+        border: 0;
+        background: none;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font: inherit;
+        color: var(--ink);
+        cursor: pointer;
+      }
+      nav button:hover {
+        background: #f6f7f9;
+      }
+      nav button[aria-current] {
+        background: rgba(255, 36, 66, 0.08);
+        color: var(--red);
+        font-weight: 600;
+      }
+      section {
+        padding: 22px 28px 40px;
+        max-width: 760px;
+      }
+      h2 {
+        margin: 0 0 4px;
+        font-size: 15px;
+        font-weight: 600;
+      }
+      .hint {
+        color: var(--mute);
+        font-size: 12px;
+        margin: 0 0 18px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 12px 16px;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--mute);
+        margin-bottom: 4px;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 7px 9px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        font: inherit;
+        color: var(--ink);
+        background: #fff;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 2px solid rgba(255, 36, 66, 0.25);
+        border-color: var(--red);
+      }
+      .req {
+        color: var(--red);
+        font-style: normal;
+        font-weight: 700;
+      }
+      label .req {
+        margin-left: 3px;
+        font-size: 13px;
+      }
+      input.miss,
+      select.miss {
+        border-color: var(--red);
+        background: #fff6f7;
+        box-shadow: 0 0 0 2px rgba(255, 36, 66, 0.12);
+      }
+      .rows {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        overflow: hidden;
+      }
+      .item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 12px;
+        border-top: 1px solid var(--line);
+      }
+      .item:first-child {
+        border-top: 0;
+      }
+      .item img {
+        width: 44px;
+        height: 58px;
+        object-fit: cover;
+        border-radius: 4px;
+        background: #f4f5f7;
+        flex: none;
+      }
+      .item .info {
+        min-width: 0;
+        flex: 1;
+      }
+      .item .info b {
+        display: block;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .item .info span {
+        color: var(--mute);
+        font-size: 12px;
+      }
+      .mini {
+        padding: 4px 10px;
+        font-size: 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--mute);
+        cursor: pointer;
+      }
+      .mini.on {
+        border-color: var(--red);
+        color: var(--red);
+        font-weight: 700;
+      }
+      .mini.del:hover {
+        border-color: var(--red);
+        color: var(--red);
+      }
+      .manage-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 12px 0;
+      }
+      .manage-bar input {
+        flex: 1 1 320px;
+        width: auto;
+        min-width: 180px;
+        max-width: 360px;
+      }
+      .manage-bar select {
+        width: auto;
+        flex: none;
+      }
+      .manage-bar .hint {
+        white-space: nowrap;
+      }
+      #mnote {
+        color: var(--red);
+      }
+      .view-tabs {
+        display: flex;
+        gap: 6px;
+        margin-left: auto;
+      }
+      .view-tabs button {
+        padding: 5px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--mute);
+        cursor: pointer;
+        font-size: 13px;
+      }
+      .view-tabs button[aria-current] {
+        border-color: var(--red);
+        color: var(--red);
+        font-weight: 600;
+      }
+      .field-help {
+        font-size: 11px;
+        color: var(--mute);
+        margin-top: 3px;
+      }
+      .ai {
+        margin: 18px 0 0;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fafbfc;
+        padding: 12px 14px;
+      }
+      .ai-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .ai-head b {
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .ai-head .spacer {
+        flex: 1;
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+      }
+      .tabs button {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 7px;
+        padding: 4px 10px;
+        font: inherit;
+        font-size: 12px;
+        color: var(--mute);
+        cursor: pointer;
+      }
+      .tabs button[aria-current] {
+        border-color: var(--red);
+        color: var(--red);
+      }
+      .ai button.copy {
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 7px;
+        padding: 4px 10px;
+        font: inherit;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .ai pre {
+        margin: 10px 0 0;
+        background: #fff;
+        max-height: 280px;
+        border-color: var(--line);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11.5px;
+      }
+      .ai p.tip {
+        margin: 6px 0 0;
+        font-size: 11px;
+        color: var(--mute);
+      }
+      .drop {
+        margin: 20px 0 0;
+        border: 1.5px dashed #d6d9df;
+        border-radius: 12px;
+        padding: 26px;
+        text-align: center;
+        color: var(--mute);
+        cursor: pointer;
+        transition: 0.15s;
+      }
+      .drop:hover,
+      .drop.over {
+        border-color: var(--red);
+        color: var(--red);
+        background: rgba(255, 36, 66, 0.03);
+      }
+      .drop b {
+        color: var(--ink);
+      }
+      .files {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .thumb {
+        width: 92px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+      }
+      .thumb img {
+        display: block;
+        width: 100%;
+        height: 108px;
+        object-fit: cover;
+      }
+      .thumb.warn {
+        border-color: #ff2442;
+        border-style: dashed;
+      }
+      .thumb.bad {
+        border-color: #ff2442;
+        border-width: 2px;
+      }
+      .thumb.pad {
+        border-color: #c9ced6;
+        border-style: dashed;
+      }
+      .thumb.pad i.badge {
+        background: rgba(0, 0, 0, 0.35);
+      }
+      .thumb i.badge {
+        position: absolute;
+        left: 4px;
+        bottom: 4px;
+        padding: 0 5px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        font-size: 11px;
+        font-style: normal;
+        line-height: 16px;
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        color: var(--mute);
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .check input {
+        width: auto;
+      }
+      .thumb button {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 20px;
+        height: 20px;
+        border: 0;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        cursor: pointer;
+        line-height: 1;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 20px;
+      }
+      button.primary {
+        background: var(--red);
+        color: #fff;
+        border: 0;
+        border-radius: 9px;
+        padding: 9px 18px;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button.ghost {
+        background: #fff;
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        padding: 9px 16px;
+        font: inherit;
+        cursor: pointer;
+      }
+      button[disabled] {
+        opacity: 0.5;
+        cursor: default;
+      }
+      pre {
+        background: #f7f8fa;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 12px;
+        line-height: 1.5;
+        overflow: auto;
+        max-height: 320px;
+        margin: 16px 0 0;
+        white-space: pre-wrap;
+      }
+      pre:empty {
+        display: none;
+      }
+      .ok {
+        color: #128a4b;
+      }
+      .err {
+        color: var(--red);
+      }
+      .row .warn {
+        color: #b06a00;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        font-size: 13px;
+        padding: 6px 0;
+        border-bottom: 1px dashed var(--line);
+      }
+      .row code {
+        font-size: 12px;
+        color: var(--mute);
+      }
+      #log {
+        margin-top: 18px;
+      }
+      header {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+      }
+      #rawLabel {
+        font-size: 12px;
+        color: var(--mute);
+      }
+      #stamp {
+        margin-left: auto;
+        font-size: 11px;
+        color: var(--mute);
+        font-variant-numeric: tabular-nums;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>衣姿 · 素材添加</h1>
+      <span id="rawLabel"></span>
+      <span
+        id="stamp"
+        title="服务启动时间：如果显示的是旧时间，说明浏览器连的还是改代码前启动的进程"
+      ></span>
+      <div class="view-tabs">
+        <button data-view="add" aria-current="true">添加素材</button>
+        <button data-view="manage">管理素材</button>
+      </div>
+    </header>
+    <main>
+      <nav id="libs"></nav>
+      <section id="addPane">
+        <h2 id="libTitle"></h2>
+        <p class="hint" id="libHint"></p>
+        <div class="grid" id="form"></div>
+        <div class="ai">
+          <div class="ai-head">
+            <b>先让 AI 改图</b>
+            <div class="tabs">
+              <button data-tab="edit" aria-current="true">改成标准</button>
+              <button data-tab="gen">从零生成</button>
+            </div>
+            <span class="spacer"></span>
+            <button class="copy" id="copyPrompt">复制提示词</button>
+          </div>
+          <pre id="promptText"></pre>
+          <p class="tip" id="promptTip"></p>
+        </div>
+        <div class="drop" id="drop">
+          拖图片到这里，或点击选择 <em class="req">*</em> <b>（支持多张）</b>
+          <input type="file" id="file" accept="image/*" multiple hidden />
+        </div>
+        <div class="files" id="files"></div>
+        <div class="actions">
+          <button class="primary" id="save">写入素材</button>
+          <button class="ghost" id="saveBuild" title="没有待写入的图时，只执行构建（python3 build.py --allow-partial）">写入并构建</button>
+          <label class="check"
+            ><input type="checkbox" id="force" /> 忽略规格检查</label
+          >
+          <span class="hint" id="status" style="margin: 0"></span>
+        </div>
+        <pre id="log"></pre>
+      </section>
+      <section id="managePane" hidden>
+        <h2 id="mTitle">管理素材</h2>
+        <p class="hint">
+          点「18+」切换标记（写进 data.json 的 <code>adult</code>）；删除会同时清掉
+          data.json 条目、assets-raw 里的原始图和 dist / dist-assets 的构建产物。
+        </p>
+        <div class="manage-bar">
+          <input id="mq" type="text" placeholder="搜 id / 名称 / 分类" />
+          <select id="mfilter">
+            <option value="all">全部</option>
+            <option value="a">只看 18+</option>
+            <option value="n">只看非 18+</option>
+          </select>
+          <span class="hint" id="mcount" style="margin: 0"></span>
+          <span class="hint" id="mnote" style="margin: 0"></span>
+        </div>
+        <div class="rows" id="mList"></div>
+      </section>
+    </main>
+    <script>
+      const LIBS = [
+        ["pose", "姿势", "一条数据一个角度；同组的多张图会按顺序分配角度。"],
+        [
+          "costume",
+          "服装",
+          "写 png/原寸 + img/图片 + thumbs/缩略图，编号按分类自动递增（SPR-0001…）。",
+        ],
+        ["anime", "动画服装", "同服装，编号独立。"],
+        [
+          "portrait",
+          "人像",
+          "写 img/full 与 img/thumb；发型名会补进 tr_portrait.txt。",
+        ],
+        [
+          "expression",
+          "表情",
+          "写 files/w300 与 w900（同一张图两个尺寸），情绪与强度进筛选项。",
+        ],
+        ["dynasty", "历代", "写 files/w300 与 w900，朝代决定系列。"],
+        ["scene", "场景", ""],
+        ["light", "光影", ""],
+        ["prop", "道具", ""],
+        ["furn", "家具", ""],
+      ];
+      const ANG_ORDER = ["正面", "上から", "横", "斜め", "下から"];
+      let meta = {},
+        profile = {},
+        prompts = {},
+        promptTab = "edit",
+        current = "pose",
+        queue = [];
+      let busy = false;
+
+      const $ = (id) => document.getElementById(id);
+      const nav = $("libs");
+
+      LIBS.forEach(([key, label]) => {
+        const b = document.createElement("button");
+        b.textContent = label;
+        b.dataset.lib = key;
+        b.onclick = () => select(key);
+        nav.append(b);
+      });
+
+      async function boot() {
+        const res = await fetch("/api/meta");
+        const data = await res.json();
+        meta = data.libs;
+        profile = data.profile || {};
+        prompts = data.prompts || {};
+        if (data.started && $("stamp"))
+          $("stamp").textContent = `服务启动 ${data.started}`;
+        $("rawLabel").textContent =
+          "原始素材目录：assets-raw（构建后点「构建」）";
+        select("pose");
+      }
+
+      function select(lib) {
+        current = lib;
+        queue = [];
+        renderFiles();
+        [...nav.children].forEach((b) =>
+          b.toggleAttribute("aria-current", b.dataset.lib === lib),
+        );
+        const info = LIBS.find((x) => x[0] === lib);
+        $("libTitle").textContent = info[1];
+        $("libHint").textContent = info[2];
+        const form = $("form");
+        form.innerHTML = "";
+        (meta[lib] || []).forEach((f) => {
+          const wrap = document.createElement("div");
+          const id = "f_" + f.key;
+          const lab = document.createElement("label");
+          lab.htmlFor = id;
+          lab.textContent = f.label;
+          if (f.req) {
+            const star = document.createElement("em");
+            star.className = "req";
+            star.textContent = "*";
+            star.title = "必填";
+            lab.append(star);
+          }
+          let el;
+          if (f.type === "select") {
+            el = document.createElement("select");
+            f.options.forEach((o) => {
+              const opt = document.createElement("option");
+              opt.value = o.value;
+              opt.textContent = o.label;
+              el.append(opt);
+            });
+          } else {
+            el = document.createElement("input");
+            el.type = "text";
+            if (f.value) el.value = f.value;
+          }
+          el.id = id;
+          el.dataset.key = f.key;
+          wrap.append(lab, el);
+          if (f.help) {
+            const h = document.createElement("div");
+            h.className = "field-help";
+            h.textContent = f.help;
+            wrap.append(h);
+          }
+          form.append(wrap);
+        });
+        renderPrompt();
+        if (view === "manage") loadManage();
+      }
+
+      // ---------------- 管理视图：列表 / 切 18+ / 删除
+      let view = "add";
+
+      function setView(next) {
+        view = next;
+        document.querySelectorAll(".view-tabs button").forEach((b) =>
+          b.toggleAttribute("aria-current", b.dataset.view === view),
+        );
+        $("addPane").hidden = view !== "add";
+        $("managePane").hidden = view !== "manage";
+        if (view === "manage") loadManage();
+      }
+
+      async function postJSON(url, body) {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        return res.json();
+      }
+
+      async function loadManage() {
+        const list = $("mList");
+        const q = $("mq").value.trim();
+        const res = await fetch(
+          `/api/items?lib=${current}&q=${encodeURIComponent(q)}`,
+        );
+        const data = await res.json();
+        if (!data.ok) {
+          $("mcount").textContent = data.error || "读取失败";
+          return;
+        }
+        const label = (LIBS.find((x) => x[0] === current) || [0, ""])[1];
+        $("mTitle").textContent = `${label} · 管理`;
+        const filter = $("mfilter").value;
+        const items = data.items.filter(
+          (it) => filter === "all" || (filter === "a") === !!it.adult,
+        );
+        $("mcount").textContent = `${items.length} / ${data.items.length} 条`;
+        list.innerHTML = "";
+        if (!items.length) {
+          const empty = document.createElement("div");
+          empty.className = "item";
+          empty.textContent = "没有条目";
+          list.append(empty);
+          return;
+        }
+        items.forEach((it) => list.append(rowFor(it)));
+      }
+
+      function rowFor(it) {
+        const row = document.createElement("div");
+        row.className = "item";
+        const img = document.createElement("img");
+        img.src = it.thumb;
+        img.alt = "";
+        img.loading = "lazy";
+        const info = document.createElement("div");
+        info.className = "info";
+        const name = document.createElement("b");
+        name.textContent = it.name || it.id;
+        const sub = document.createElement("span");
+        sub.textContent = [it.id, it.cat, it.note].filter(Boolean).join(" · ");
+        info.append(name, sub);
+        const adult = document.createElement("button");
+        adult.className = "mini" + (it.adult ? " on" : "");
+        adult.textContent = "18+";
+        adult.title = it.adult ? "点击取消 18+ 标记" : "点击打上 18+ 标记";
+        adult.onclick = async () => {
+          adult.disabled = true;
+          const out = await postJSON("/api/update", {
+            lib: current,
+            id: it.id,
+            adult: it.adult ? 0 : 1,
+          });
+          adult.disabled = false;
+          if (!out.ok) return void ($("mnote").textContent = out.error);
+          $("mnote").textContent = "18+ 标记已改，点「写入并构建」后图库才生效";
+          loadManage();
+        };
+        const del = document.createElement("button");
+        del.className = "mini del";
+        del.textContent = "删除";
+        del.onclick = async () => {
+          if (
+            !confirm(
+              `删除「${it.name || it.id}」（${it.id}）？\n原始图和构建产物会一起删掉，不能撤销。`,
+            )
+          )
+            return;
+          del.disabled = true;
+          $("mnote").textContent = "删除中，正在重建…";
+          const out = await postJSON("/api/delete", {
+            lib: current,
+            id: it.id,
+          });
+          if (!out.ok) {
+            del.disabled = false;
+            return void ($("mnote").textContent = out.error);
+          }
+          $("mnote").textContent = out.built
+            ? `已删除 ${out.removed} 条并重建，图库刷新即可`
+            : "已删除，但重建失败（条数没变），看构建日志";
+          loadManage();
+        };
+        row.append(img, info, adult, del);
+        return row;
+      }
+
+      document.querySelectorAll(".view-tabs button").forEach((b) => {
+        b.onclick = () => setView(b.dataset.view);
+      });
+      let mqTimer;
+      $("mq").oninput = () => {
+        clearTimeout(mqTimer);
+        mqTimer = setTimeout(loadManage, 220);
+      };
+      $("mfilter").onchange = loadManage;
+
+      function renderPrompt() {
+        const set = prompts[current] || {};
+        const text = set[promptTab] || "";
+        $("promptText").textContent = text || "（该库暂无提示词）";
+        const p = profile[current];
+        $("promptTip").textContent = p
+          ? `标准：${p.hint}；长边 ≥${p.side}px${p.ratio ? `，宽高比 ${p.ratio.toFixed(3)}` : ""}。改完的图直接拖到下面。`
+          : "";
+        [...document.querySelectorAll(".tabs button")].forEach((b) =>
+          b.toggleAttribute("aria-current", b.dataset.tab === promptTab),
+        );
+      }
+
+      document.querySelectorAll(".tabs button").forEach((b) => {
+        b.onclick = () => {
+          promptTab = b.dataset.tab;
+          renderPrompt();
+        };
+      });
+
+      $("copyPrompt").onclick = async () => {
+        const text = (prompts[current] || {})[promptTab] || "";
+        if (!text) return;
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          document.body.append(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+        }
+        $("copyPrompt").textContent = "已复制";
+        setTimeout(() => {
+          $("copyPrompt").textContent = "复制提示词";
+        }, 1200);
+      };
+
+      function fields() {
+        const out = {};
+        document.querySelectorAll("#form [data-key]").forEach((el) => {
+          out[el.dataset.key] = el.value.trim();
+        });
+        return out;
+      }
+
+      $("drop").onclick = () => $("file").click();
+      $("file").onclick = (e) => e.stopPropagation(); // 程序化 click 会冒泡回 drop，不拦住会反复弹选择框
+      $("file").onchange = (e) => push([...e.target.files]);
+      ["dragenter", "dragover"].forEach((ev) =>
+        $("drop").addEventListener(ev, (e) => {
+          e.preventDefault();
+          $("drop").classList.add("over");
+        }),
+      );
+      ["dragleave", "drop"].forEach((ev) =>
+        $("drop").addEventListener(ev, (e) => {
+          e.preventDefault();
+          $("drop").classList.remove("over");
+        }),
+      );
+      $("drop").addEventListener("drop", (e) =>
+        push([...e.dataTransfer.files]),
+      );
+
+      // 前端先按同一套标准粗判（比例/分辨率），完整校验在服务端
+      function precheck(w, h) {
+        const p = profile[current];
+        if (!p) return { level: "", note: "" };
+        const long = Math.max(w, h);
+        const ratio = w / h;
+        if (long < p.side)
+          return { level: "bad", note: `长边 ${long}px < ${p.side}px` };
+        if (p.ratio && Math.abs(ratio - p.ratio) > 0.02) {
+          // 写入时服务端会自动补白到标准画布，这里只提示，不当作问题
+          return {
+            level: "pad",
+            note: `比例 ${ratio.toFixed(2)} → 自动补白到 ${p.ratio.toFixed(2)}`,
+          };
+        }
+        return { level: "", note: `${w}×${h}` };
+      }
+
+      function push(files) {
+        files
+          .filter((f) => f.type.startsWith("image/"))
+          .forEach((file) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const probe = new Image();
+              probe.onload = () => {
+                const chk = precheck(probe.naturalWidth, probe.naturalHeight);
+                queue.push({
+                  name: file.name,
+                  data: reader.result,
+                  w: probe.naturalWidth,
+                  h: probe.naturalHeight,
+                  chk,
+                });
+                renderFiles();
+              };
+              probe.src = reader.result;
+            };
+            reader.readAsDataURL(file);
+          });
+      }
+
+      function renderFiles() {
+        const box = $("files");
+        box.innerHTML = "";
+        queue.forEach((item, idx) => {
+          const cell = document.createElement("div");
+          cell.className = "thumb " + (item.chk?.level || "");
+          cell.title = item.chk?.note
+            ? `${item.name} · ${item.chk.note}`
+            : item.name;
+          const img = document.createElement("img");
+          img.src = item.data;
+          const del = document.createElement("button");
+          del.textContent = "×";
+          del.onclick = () => {
+            queue.splice(idx, 1);
+            renderFiles();
+          };
+          cell.append(img, del);
+          if (item.chk?.level) {
+            const badge = document.createElement("i");
+            badge.className = "badge";
+            badge.textContent =
+              item.chk.level === "bad"
+                ? "尺寸不足"
+                : item.chk.level === "pad"
+                  ? "自动补白"
+                  : "";
+            cell.append(badge);
+          }
+          box.append(cell);
+        });
+        // 写入需要待写入的图；构建不依赖队列，随时可点（空队列时只构建）
+        $("save").disabled = busy || queue.length === 0;
+        $("saveBuild").disabled = busy;
+      }
+
+      // 必填校验：只按 meta 里的 req 标，缺一项就聚焦并给出提示
+      function validate() {
+        const missing = (meta[current] || []).filter((f) => {
+          const el = document.querySelector(`#form [data-key="${f.key}"]`);
+          if (!el) return false;
+          const empty = !el.value.trim();
+          el.classList.toggle("miss", empty && !!f.req);
+          return empty && !!f.req;
+        });
+        if (!missing.length) return null;
+        const el = document.querySelector(`#form [data-key="${missing[0].key}"]`);
+        el.focus();
+        return missing.map((f) => f.label).join("、");
+      }
+
+      document.querySelectorAll("#form").forEach((form) =>
+        form.addEventListener("input", (e) => {
+          if (e.target.value.trim()) e.target.classList.remove("miss");
+        }),
+      );
+
+      // 构建失败时把最后一行异常摘出来放状态栏，省得用户在一大段日志里找
+      const errLine = (text = "") => {
+        const hit = text
+          .trim()
+          .split("\n")
+          .filter((l) => /(Error|error:|Traceback)/.test(l))
+          .pop();
+        return hit ? hit.trim().slice(0, 120) : "见下方构建输出";
+      };
+
+      async function submit(build) {
+        if (!queue.length && !build) {
+          $("status").textContent = "先拖一张图进来";
+          return;
+        }
+        if (queue.length) {
+          const lack = validate();
+          if (lack) {
+            $("status").textContent = `请填写：${lack}`;
+            return;
+          }
+        }
+        const base = fields();
+        const rows = [];
+        const log = $("log");
+        log.textContent = "";
+        busy = true;
+        $("save").disabled = $("saveBuild").disabled = true;
+        $("status").textContent = queue.length ? "写入中…" : "构建中…";
+        let failed = 0;
+        for (let i = 0; i < queue.length; i++) {
+          const f = { ...base };
+          if (current === "pose" && queue.length > 1) {
+            f.ang = ANG_ORDER[i % ANG_ORDER.length];
+          }
+          let out;
+          try {
+            const res = await fetch("/api/add", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                lib: current,
+                fields: f,
+                image: queue[i].data,
+                force: $("force").checked,
+              }),
+            });
+            out = await res.json();
+          } catch (err) {
+            rows.push(
+              `<div class="row"><span class="err">✕ ${queue[i].name}</span><code>请求失败：${err.message}</code></div>`,
+            );
+            break;
+          }
+          // 首条 error 已经在上一行显示过，这里去掉重复
+          const issues = (out.issues || [])
+            .filter((it) => it.msg !== out.error)
+            .map(
+              (it) =>
+                `<div class="row"><span class="${it.level === "error" ? "err" : "warn"}">${it.level === "error" ? "✕" : "!"}</span><code>${it.msg}</code></div>`,
+            )
+            .join("");
+          if (out.ok) {
+            rows.push(
+              `<div class="row"><span class="ok">✓ ${out.id}</span><code>${out.files.length} 个文件</code></div>`,
+            );
+            if (out.note)
+              rows.push(
+                `<div class="row"><span></span><code>${out.note}</code></div>`,
+              );
+            rows.push(issues);
+          } else {
+            failed += 1;
+            rows.push(
+              `<div class="row"><span class="err">✕ ${queue[i].name}</span><code>${out.error}</code></div>`,
+            );
+            rows.push(issues);
+          }
+        }
+        const written = queue.length;
+        queue = [];
+        renderFiles();
+        log.innerHTML = rows.join("");
+        $("status").textContent = "";
+        if (build && failed) {
+          // 有图没写进去就不构建，免得「红色错误 + 构建完成」同时出现
+          $("status").textContent = `${failed} 条没写进去，未构建`;
+          busy = false;
+          renderFiles();
+          return;
+        }
+        if (build) {
+          $("status").textContent = "构建中…";
+          try {
+            const res = await fetch("/api/build", { method: "POST" });
+            const out = await res.json();
+            log.innerHTML += `<pre class="${out.ok ? "ok" : "err"}">${out.output || ""}</pre>`;
+            $("status").textContent = out.ok
+              ? "构建完成"
+              : `构建失败：${errLine(out.output)}`;
+          } catch (err) {
+            log.innerHTML += `<pre class="err">构建请求失败：${err.message}</pre>`;
+            $("status").textContent = "构建失败";
+          }
+          busy = false;
+          renderFiles();
+        } else {
+          $("status").textContent = written
+            ? `已写入 ${written} 条，点「写入并构建」生成产物`
+            : "";
+          busy = false;
+          renderFiles();
+        }
+      }
+
+      $("save").onclick = () => submit(false);
+      $("saveBuild").onclick = () => submit(true);
+      boot();
+    </script>
+  </body>
+</html>
