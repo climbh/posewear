@@ -19,3 +19,8 @@ tests/screenshots/
 indexnow.key
 urls.txt
 .indexnow-state.json
+# DSH 工作区规范，自动生成，勿提交
+AGENTS.local.md
+.venv/
+.catalog-cache.json
+test-results/
