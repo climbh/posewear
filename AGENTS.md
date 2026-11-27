@@ -71,7 +71,7 @@ npm run deploy
 5. `curl -X OPTIONS https://posewear.pages.dev/api/proxy` 返回 204；
 6. 本次改动的功能点在生产页面实际点一遍（或用线上地址跑对应测试套件）。
 
-开发预览的静态 SEO 路由优先读本地 `dist/`，可用 `POSEWEAR_STAGING=/absolute/path npm start` 指向构建副本。没有对应本地页时会读取发布站版本。
+开发预览的静态 SEO 路由优先读本地 `dist/`，可用 `POSEWEAR_STAGING=/absolute/path npm start` 指向构建副本。**设了这个变量后，12 份目录 JSON、首页统计数字和图库图片也都改读构建副本**（否则永远抓线上目录、图片走 pwimg，刚添加的素材在预览里看不到）；不设时仍抓线上目录。**空库自动回退线上**：表情/发型/历代/场景/光影/道具/家具 的原始档案不在仓库，`--allow-partial` 构建出来是空数组，这类库的目录、首页统计数字和图片会分别回退到发布站目录与 R2/主站图片，否则本地预览里这几库会整片空白。没有对应本地页时会读取发布站版本。
 
 ## 数据与素材
 
@@ -79,6 +79,21 @@ npm run deploy
 - 发型与部分动画服装来自 CharaDB：**图片只能热链**（`charadb-2fi.pages.dev`），禁止再分发、不要下载进 R2/dist。
 - 新增热链数据源时必须同步 CSP：`build.py` 会从 CharaDB 数据自动收集源站写入 img-src，connect-src 允许 HTTPS 以支持自定义直连，图片展示仍限指定来源。新数据源要照此处理，并跑 `tests/check_csp.py` 守卫（2026-11-23 发型库全灭就是漏了这一步）。
 - 条目数据字段：`t/m/i/o` 是四档图片路径，`ext=1` 表示热链外站图，`ref` 为 referrerpolicy。
+- 具体怎么加素材/条目/整个新库：见 [docs/adding-assets.md](docs/adding-assets.md)（各库原始数据字段、图片档位规格、热链 CSP、R2 同步、条数断言）。`npm run add` 起本地添加器（`scripts/add-asset.py`）：拖图填表即写入 `assets-raw/` 并追加条目，可一键构建。
+
+## 上游同步
+
+本地叠了上游没有的功能（本地生图引擎、添加器、预览启动脚本等），所以分支分工是硬约定：**`main` 只跟上游（不提交、不改文件），本地功能全部在 `local` 分支**，每次同步把 `local` rebase 到上游最新或发布 tag。
+
+```bash
+scripts/sync-upstream.sh --check          # 上游进了什么、哪些文件会撞车（不动本地）
+scripts/sync-upstream.sh                  # 同步到 origin/main
+scripts/sync-upstream.sh --tag v1.5.0     # 跟发布 tag（推荐）
+scripts/sync-upstream.sh --status         # 领先/落后多少、备份点
+git reset --hard refs/upstream-backup/<备份点>   # 回滚
+```
+
+首次迁移（把工作区改动切成提交）用 `--bootstrap`，细节、冲突解法、降摩擦写法见 [docs/upstream-sync.md](docs/upstream-sync.md)。同步后先 `node tests/run.mjs --offline` 再 `npm start` 手点本地引擎与添加器；部署仍在 `local` 分支上跑 `npm run deploy`（脚本已显式带 `--branch main`）。
 
 ## 测试
 
