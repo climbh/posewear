@@ -119,7 +119,7 @@ if [ "$MODE" = "bootstrap" ]; then
   # 同步脚本本身放在第一个提交里：rebase 到中途时工作区处于某个历史提交状态，
   # 脚本若在后面的提交里就会「消失」，--abort 反而用不了
   commit_group "chore: 本地忽略、开发环境与上游同步脚本" .gitignore scripts/sync-upstream.sh
-  commit_group "docs: 补充本地引擎与素材添加文档" docs/local-engines.md docs/adding-assets.md AGENTS.md
+  commit_group "docs: 补充本地引擎与素材添加文档" docs/local-engines.md docs/adding-assets.md docs/upstream-sync.md AGENTS.md
   commit_group "feat: 本地预览与本地生图引擎（ComfyUI / sd.cpp）" \
     scripts/local-engine.mjs scripts/preview.mjs src/image-providers.js src/studio.js \
     src/app.js src/index.html src/style.css src/history.js build.py \
