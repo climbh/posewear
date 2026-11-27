@@ -83,17 +83,18 @@ npm run deploy
 
 ## 上游同步
 
-本地叠了上游没有的功能（本地生图引擎、添加器、预览启动脚本等），所以分支分工是硬约定：**`main` 只跟上游（不提交、不改文件），本地功能全部在 `local` 分支**，每次同步把 `local` rebase 到上游最新或发布 tag。
+仓库是 [atuizz/posewear](https://github.com/atuizz/posewear) 的 fork（`climbh/posewear`）。远端分工：**`origin` = 自己的 fork（唯一可推）**，**`upstream` = 原作者（只 fetch，push 已设 DISABLED）**；分支分工：**`main` 只跟上游（不提交、不改文件）**，本地功能全部在 `local` 分支，rebase 维护。
 
 ```bash
 scripts/sync-upstream.sh --check          # 上游进了什么、哪些文件会撞车（不动本地）
-scripts/sync-upstream.sh                  # 同步到 origin/main
+scripts/sync-upstream.sh                  # 同步到 upstream/main
 scripts/sync-upstream.sh --tag v1.5.0     # 跟发布 tag（推荐）
-scripts/sync-upstream.sh --status         # 领先/落后多少、备份点
-git reset --hard refs/upstream-backup/<备份点>   # 回滚
+scripts/sync-upstream.sh --push           # 同步并验收后推 origin/local
+scripts/sync-upstream.sh --status          # 领先/落后多少、备份点
+git reset --hard refs/upstream-backup/<备份点>   # 回滚到同步前
 ```
 
-首次迁移（把工作区改动切成提交）用 `--bootstrap`，细节、冲突解法、降摩擦写法见 [docs/upstream-sync.md](docs/upstream-sync.md)。同步后先 `node tests/run.mjs --offline` 再 `npm start` 手点本地引擎与添加器；部署仍在 `local` 分支上跑 `npm run deploy`（脚本已显式带 `--branch main`）。
+首次迁移（把工作区改动切成提交）用 `--bootstrap`；冲突解法、降摩擦写法、fork 模型细节见 [docs/upstream-sync.md](docs/upstream-sync.md)。同步后先 `node tests/run.mjs --offline`（需 `npx playwright install chromium`）再 `npm start` 手点本地引擎与添加器；部署仍在 `local` 分支上跑 `npm run deploy`（脚本已显式带 `--branch main`）。
 
 ## 测试
 
