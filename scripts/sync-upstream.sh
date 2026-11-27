@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # 上游同步器（本地辅助脚本，非上游文件）
 #
-# 模型：origin/main 是纯上游镜像（只 fetch 不提交），本地功能全部放在 local 分支上，
+# 模型：origin = 自己的 fork（climbh/posewear），upstream = 原作者仓库（atuizz/posewear，只 fetch）；
+#      upstream/main 是纯上游镜像，本地功能全部放在 local 分支上，
 #      每次同步把 local 分支 rebase 到上游最新，冲突只发生在自己的提交里。
 #
 # 用法：
 #   scripts/sync-upstream.sh --bootstrap      首次：把当前未提交的本地改动按主题落到 local 分支
 #   scripts/sync-upstream.sh --check          只看上游新提交 + 冲突面预估，不动任何东西
-#   scripts/sync-upstream.sh                  同步到 origin/main
+#   scripts/sync-upstream.sh                  同步到 upstream/main
 #   scripts/sync-upstream.sh --tag v1.5.0     同步到指定发布 tag（更稳，推荐跟 tag）
+#   scripts/sync-upstream.sh --push           同步成功后 force-with-lease 推到 origin（fork）的 local
 #   scripts/sync-upstream.sh --tests          同步成功后跑离线回归（node tests/run.mjs --offline）
 #   scripts/sync-upstream.sh --abort          放弃正在进行的 rebase，回到最近的备份点
 #   scripts/sync-upstream.sh --status         看当前分支领先/落后上游多少、本地提交列表、备份点
@@ -18,12 +20,13 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-REMOTE="${REMOTE:-origin}"
+REMOTE="${REMOTE:-upstream}"
 LOCAL_BRANCH="${LOCAL_BRANCH:-local}"
 UPSTREAM_BRANCH="${UPSTREAM_BRANCH:-main}"
 TAG=""
 MODE="sync"
 RUN_TESTS=0
+DO_PUSH=0
 
 die() { printf '\033[31m✗ %s\033[0m\n' "$*" >&2; exit 1; }
 info() { printf '\033[36m• %s\033[0m\n' "$*"; }
@@ -34,12 +37,13 @@ while [ $# -gt 0 ]; do
     --bootstrap) MODE="bootstrap" ;;
     --check) MODE="check" ;;
     --tests) RUN_TESTS=1 ;;
+    --push) DO_PUSH=1 ;;
     --tag) TAG="${2:?--tag 需要版本号，例如 --tag v1.5.0}"; shift ;;
     --remote) REMOTE="${2:?--remote 需要名字}"; shift ;;
     --branch) LOCAL_BRANCH="${2:?--branch 需要分支名}"; shift ;;
     --abort) MODE="abort" ;;
     --status) MODE="status" ;;
-    -h|--help) sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) die "未知参数：$1（--help 看用法）" ;;
   esac
   shift
@@ -238,6 +242,11 @@ ok "rebase 完成，$LOCAL_BRANCH 现在基于 $TARGET_DESC（本地提交 $LOCA
 [ "$AFTER" -lt "$LOCAL_COMMITS" ] && info "有 $((LOCAL_COMMITS-AFTER)) 个提交被上游吸收/内容已存在而自动丢弃，属正常"
 git log --oneline --no-decorate "$TARGET..HEAD"
 
+if [ "$DO_PUSH" = 1 ]; then
+  info "推送到 origin/$LOCAL_BRANCH（force-with-lease）"
+  git push --force-with-lease origin "$LOCAL_BRANCH"
+fi
+
 if [ "$RUN_TESTS" = 1 ]; then
   info "跑离线回归"
   node tests/run.mjs --offline || die "回归失败，先用 --abort 回到 $BACKUP 再逐项排查"
@@ -248,7 +257,7 @@ cat <<EOF
 
 下一步：
   npm start                      # 本地预览确认功能还在
-  git push <你的远端> $LOCAL_BRANCH   # 需要备份到远端时才推
+  scripts/sync-upstream.sh --push    # 需要同步到 fork 时才推（下次可加 --push 一起做）
 回滚：
   git reset --hard $BACKUP
 EOF
