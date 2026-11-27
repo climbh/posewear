@@ -86,6 +86,7 @@ npm run deploy
 仓库是 [atuizz/posewear](https://github.com/atuizz/posewear) 的 fork（`climbh/posewear`）。远端分工：**`origin` = 自己的 fork（唯一可推）**，**`upstream` = 原作者（只 fetch，push 已设 DISABLED）**；分支分工：**`main` 只跟上游（不提交、不改文件）**，本地功能全部在 `local` 分支，rebase 维护。
 
 ```bash
+scripts/sync-upstream.sh --agent-brief    # 给 AI/Agent 的执行契约（同步前先读，唯一权威流程）
 scripts/sync-upstream.sh --check          # 上游进了什么、哪些文件会撞车（不动本地）
 scripts/sync-upstream.sh                  # 同步到 upstream/main
 scripts/sync-upstream.sh --tag v1.5.0     # 跟发布 tag（推荐）
@@ -93,6 +94,8 @@ scripts/sync-upstream.sh --push           # 同步并验收后推 origin/local
 scripts/sync-upstream.sh --status          # 领先/落后多少、备份点
 git reset --hard refs/upstream-backup/<备份点>   # 回滚到同步前
 ```
+
+其它 agent 的入口文件都指向同一条契约，换工具不用重新讲规则：`CLAUDE.md`、`GEMINI.md`、`QWEN.md`、`CONVENTIONS.md`（aider）、`.windsurfrules`、`.clinerules`、`.junie/guidelines.md`、`.github/copilot-instructions.md`、`.cursor/rules/upstream-sync.mdc`。契约正文只存在一处：`scripts/sync-upstream.sh --agent-brief`。
 
 首次迁移（把工作区改动切成提交）用 `--bootstrap`；冲突解法、降摩擦写法、fork 模型细节见 [docs/upstream-sync.md](docs/upstream-sync.md)。同步后先 `node tests/run.mjs --offline`（需 `npx playwright install chromium`）再 `npm start` 手点本地引擎与添加器；部署仍在 `local` 分支上跑 `npm run deploy`（脚本已显式带 `--branch main`）。
 

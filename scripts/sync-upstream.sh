@@ -14,6 +14,7 @@
 #   scripts/sync-upstream.sh --tests          同步成功后跑离线回归（node tests/run.mjs --offline）
 #   scripts/sync-upstream.sh --abort          放弃正在进行的 rebase，回到最近的备份点
 #   scripts/sync-upstream.sh --status         看当前分支领先/落后上游多少、本地提交列表、备份点
+#   scripts/sync-upstream.sh --agent-brief    打印给 AI/Agent 的执行契约（同步前先读这个）
 #
 # 任何一次同步前都会把当前 HEAD 登记到 refs/upstream-backup/<branch>-<时间戳>，
 # 出问题一条命令回滚：git reset --hard refs/upstream-backup/<名字>
@@ -43,7 +44,8 @@ while [ $# -gt 0 ]; do
     --branch) LOCAL_BRANCH="${2:?--branch 需要分支名}"; shift ;;
     --abort) MODE="abort" ;;
     --status) MODE="status" ;;
-    -h|--help) sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    --agent-brief) MODE="agent-brief" ;;
+    -h|--help) sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) die "未知参数：$1（--help 看用法）" ;;
   esac
   shift
@@ -56,6 +58,50 @@ latest_backup_ref() {
 }
 
 case "$MODE" in
+  agent-brief)
+    cat <<'BRIEF'
+上游同步 · Agent 执行契约（本仓库唯一权威流程，任何 agent 都按这份做）
+
+【触发】用户说「同步上游 / 拉原作者更新 / 更新到最新版 / 看看上游有没有新功能」时执行。
+
+【环境事实】
+  origin   = git@github.com:climbh/posewear.git   自己的 fork，唯一允许 push 的远端
+  upstream = https://github.com/atuizz/posewear   原作者，push 地址已设为 DISABLED，永久只读
+  main     = 上游镜像，只允许 `git branch -f main upstream/main`，绝不提交、绝不改文件
+  local    = 唯一工作分支，本地功能全部叠在这里，用 rebase（不是 merge）维护
+  当前工作区应当停在 local 分支；不在的话先 `git switch local`。
+
+【标准流程】
+  1) scripts/sync-upstream.sh --check
+     → 看上游进了哪些提交、哪些文件「上游改过且本地也改过」（comm -12 交集）。只读，不动本地。
+  2) scripts/sync-upstream.sh --tag <最新发布tag>
+     （跟 tag 比跟 main 稳；没有新 tag 才跟 upstream/main。脚本内部会 fetch、登记备份点、rebase。）
+  3) 有冲突时：逐文件按「本地行为优先、上游实现方式吸收」解，然后
+       git add <文件> && git rebase --continue
+     上游把同类能力收了、本地那份已多余 → `git rebase --skip`
+     解不动或方向错 → `git rebase --abort`（脚本已把原 HEAD 存在 refs/upstream-backup/<名字>）
+  4) 验收（缺一不可）：
+       CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" node tests/run.mjs --offline
+       npm start  然后手点：本地引擎状态、npm run add 添加器、生成记录、界面语言切换
+  5) 全绿后：scripts/sync-upstream.sh --push   （推到 origin/local）
+     再 `git branch -f main upstream/main && git push origin main:main` 让 fork 的 main 也保持镜像
+  6) 报告：上游新增了什么、本地哪几个提交被吸收/改写、冲突文件怎么解的、测试结果。
+
+【禁止】
+  ✗ 不要 `git push upstream`（DISABLED）、不要给上游开 PR 当默认动作
+  ✗ 不要 `git merge upstream/main` 进 local（历史会脏，之后每次都难 rebase）
+  ✗ 不要在 main 上提交或改文件
+  ✗ 不要 `git rebase --onto` 之外的花活、不要 rebase 到本地 tag 之外的自造 base
+  ✗ 不要用 `git add -A` 提交（dist/、dist-assets/、assets-raw/ 常在未跟踪状态）
+  ✗ 不要省掉验收就 --push
+
+【部署】仍在 local 分支：npm run deploy（脚本已写死 --branch main，别手敲裸 wrangler pages deploy，
+        否则会静默发到分支预览、生产不变）。部署不是同步的一部分，用户没要求就不要发。
+
+【细节】docs/upstream-sync.md
+BRIEF
+    exit 0
+    ;;
   abort)
     in_rebase && { git rebase --abort; ok "已放弃 rebase"; }
     REF="$(latest_backup_ref)"

@@ -2,6 +2,14 @@
 
 本地仓库是 [atuizz/posewear](https://github.com/atuizz/posewear) 的 fork（[climbh/posewear](https://github.com/climbh/posewear)），本地又叠了一批上游没有的功能：本地生图引擎（ComfyUI / sd.cpp）、添加器 `npm run add`、预览启动脚本 `local-preview.sh`、代理日志与重试等。目标：**上游发新版本时整段吸收，本地功能一行不丢**。
 
+## 任何 Agent 的入口（先跑这条）
+
+```bash
+scripts/sync-upstream.sh --agent-brief
+```
+
+契约正文只维护在脚本里（`--agent-brief` 的 heredoc），仓库里各 agent 的规则文件都是同一段短指针：`CLAUDE.md`、`GEMINI.md`、`QWEN.md`、`CONVENTIONS.md`（aider）、`.windsurfrules`、`.clinerules`、`.junie/guidelines.md`、`.github/copilot-instructions.md`、`.cursor/rules/upstream-sync.mdc`，再加上本文件的 `AGENTS.md` 小节。所以流程要改时只改脚本和这里，别去九个文件里各改一遍。
+
 ## 远端与分支分工（硬约定）
 
 ```
