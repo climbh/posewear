@@ -35,6 +35,7 @@
       ? !!localEngine && (!localPreset || !!settings.checkpoint)
       : !!settings.key;
 
+  // 不预置任何服务商地址、密钥与模型：默认走内置协议，字段留空，由用户在设置里自填并存进 localStorage。
   const defaultConfig = {
     prov: localEngine && !localPreset ? 'local' : 'openai',
     base: '',
@@ -118,6 +119,10 @@
     });
   }
 
+  // 参考图角色：ComfyUI 多参考图按角色给 IPAdapter 分配权重（人物 > 服装 > 姿势 > 发型 > 其他）。
+  const REF_ROLE = { portrait: 'person', costume: 'costume', anime: 'costume', pose: 'pose', depth: 'pose', hair: 'hair', expr: 'expression' };
+  const refRole = ref => REF_ROLE[A.ITEMS[ref.k]?.type] || 'extra';
+
   // ---------- Helpers ----------
   const modelOf = (settings = cfg) =>
     settings.prov === 'local' && localPreset
@@ -169,22 +174,61 @@
     return new Promise(resolve => canvas.toBlob(blob => resolve({ blob, w, h }), 'image/jpeg', 0.92));
   }
 
-  const libSrc = ref => {
+  // 目录里每张图有 o(原图 png)、i(大图 webp)、m(中图)、t(缩略图) 四种地址，
+  // 实测 i 这一档在 R2 上大面积 404，o 才稳定（原图 png，参考图就是要原图）。
+  const libSources = ref => {
     const it = A.ITEMS[ref.k];
-    return it.angles ? it.angles[ref.ai ?? it.ai].i : it.i;
+    const ang = it.angles ? (it.angles[ref.ai ?? it.ai] || it.angles[0]) : null;
+    const list = ang
+      ? [ang.o, ang.i, ang.t]
+      : (ref.kind === 'portrait' ? [it.o, it.m, it.i] : [it.o, it.i, it.m, it.t]);
+    return list.filter(Boolean);
   };
+
+  // 素材分两处存放：o/（原图）和各库 t/（缩略图）在 R2（pwimg.0vo.pro），
+  // i/、m/ 是主站同源文件（见 build.py 的 dirs 列表）。
+  // R2 没开 CORS，直接 fetch 会被浏览器拦掉，跨域图还会污染 canvas 让 toJpeg 抛 SecurityError，
+  // 所以 R2 档位统一走 /api/proxy 的图片通道；同源档位必须留在同源——
+  // 拼到图床上会 404（pwimg 上没有 m/i），届时即使 o 能取到也会被连带记成失败。
+  const R2_ASSET = /^(?:o\/|(?:p|c|a|r|e|y|s|l|t|f)\/t\/)/;
+  function absAsset(src) {
+    if (/^https?:/i.test(src)) return src;
+    const rel = String(src).replace(/^\/+/, '');
+    const base = R2_ASSET.test(rel) ? (window.PoseWearAssetBase || location.origin + '/') : location.origin + '/';
+    return base.replace(/\/+$/, '') + '/' + rel;
+  }
+
+  async function assetFetch(src, signal) {
+    src = absAsset(src);
+    try {
+      const viaProxy = await fetch('/api/proxy', {
+        signal,
+        headers: { 'x-target-url': src, 'x-proxy-kind': 'image', 'x-proxy-custom': '1' }
+      });
+      if (viaProxy.ok) return viaProxy;
+    } catch (error) {
+      if (error.name === 'AbortError') throw error;
+    }
+    return fetch(src, { signal });
+  }
 
   async function assetBlob(ref, signal) {
     if (ref.blob) return ref.blob;
-    const src = ref.kind === 'portrait' ? A.ITEMS[ref.k].m : libSrc(ref);
-    const resp = await fetch(src, { signal, referrerPolicy: A.ITEMS[ref.k].ref || '' });
-    if (!resp.ok) throw Error(`素材下载失败（${resp.status}）`);
-    const url = URL.createObjectURL(await resp.blob());
-    try {
-      return (await toJpeg(url, ref.kind === 'portrait' ? 1536 : 1280)).blob;
-    } finally {
-      URL.revokeObjectURL(url);
+    const tried = [];
+    for (const src of libSources(ref)) {
+      const resp = await assetFetch(src, signal).catch(error => (error.name === 'AbortError' ? Promise.reject(error) : null));
+      if (!resp || !resp.ok || !/^image\//.test(resp.headers.get('content-type') || '')) {
+        tried.push(String(src).split('/').pop());
+        continue;
+      }
+      const url = URL.createObjectURL(await resp.blob());
+      try {
+        return (await toJpeg(url, ref.kind === 'portrait' ? 1536 : 1280)).blob;
+      } finally {
+        URL.revokeObjectURL(url);
+      }
     }
+    throw Error('素材下载失败：目录里的图片地址都不可用（' + (tried.join('、') || '无地址') + '）');
   }
 
   const isGen = () => W.mode === 'gen';
@@ -1208,7 +1252,7 @@
     $('#cfBase').value = settings.base;
     $('#cfBase').placeholder = P.base || 'https://你的中转地址/v1';
     $('#cfKey').value = settings.key;
-    $('#cfKey').placeholder = settings.prov === 'gemini' ? 'AIza…' : 'sk-… / 方舟 API Key';
+    $('#cfKey').placeholder = settings.prov === 'gemini' ? 'AIza…' : settings.prov === 'uncensored' ? 'ou-…' : 'sk-… / 方舟 API Key';
     $('#cfModel').value = settings.model;
     $('#cfModel').placeholder = P.model;
     $('#cfModels').innerHTML = P.models.map(m => `<option value="${m}">`).join('');
@@ -1219,10 +1263,13 @@
     $('#cfProxy').checked = settings.proxy;
     $('#cfHelp').innerHTML =
       ({
-        local: preset ? '使用一张参考图。测试连接后选择模型。' : '使用本机已启动的引擎。',
+        local: preset
+          ? '人物 / 服装 / 姿势 / 发型 可以同时作参考：装了 IPAdapter 按角色权重分别注入；没装则用 ImageStitch 拼成一张网格。测试连接后选择模型。'
+          : '使用本机已启动的引擎。',
         openai: '在 <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a> 创建密钥；gpt-image-1 需要已验证的组织。',
         gemini: '在 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">Google AI Studio</a> 免费获取 API Key（AIza 开头）。',
         seedream: '在 <a href="https://console.volcengine.com/ark" target="_blank" rel="noopener">火山方舟控制台</a> 开通 Seedream 模型并创建 API Key；会自动走本站代理。',
+        uncensored: '在 <a href="https://openuncensored.com/credits" target="_blank" rel="noopener">openuncensored.com/credits</a> 充值后复制 <code>ou-</code> 开头的密钥，粘进来就能用：地址与 lustify-v8 模型已预置。默认经本站代理转发（该服务只放行白名单来源的浏览器请求）。',
         custom: '直连时，浏览器将密钥和图片发给填写的地址；启用本站代理后经本站转发。http/https 与任意端口均可。',
       })[settings.prov] || '';
     $('#cfMsg').textContent = '';
@@ -1278,8 +1325,9 @@
     r.onchange = () => {
       const draft = cfgRead();
       if (draft.prov === cfg.prov) cfgFill(cfg);
-      else cfgFill({ ...draft, base: '', key: '', model: '', proxy: draft.prov === 'seedream' });
+      else cfgFill({ ...draft, base: '', key: '', model: '', proxy: draft.prov === 'seedream' || draft.prov === 'uncensored' });
       if (draft.prov === 'seedream') msg('火山方舟接口不允许浏览器跨域，已开启本站代理');
+      if (draft.prov === 'uncensored') msg('该服务只放行白名单来源的浏览器请求，已开启本站代理');
     };
   });
   $('#cfProto').onchange = () => { $('#cfFieldW').hidden = $('#cfProto').value !== 'edits'; };
@@ -1288,6 +1336,25 @@
     k.type = k.type === 'password' ? 'text' : 'password';
     $('#cfEye').textContent = k.type === 'password' ? '显示' : '隐藏';
   };
+  // 只写本地预览服务（/api/diag 由 scripts/preview.mjs 记录到控制台），不含密钥，
+  // 用于「测试连接正常、生成却失败」这类只能在浏览器里复现的问题。
+  function diag(error, settings) {
+    try {
+      fetch('/api/diag', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          prov: settings.prov, base: String(settings.base || '').slice(0, 120),
+          model: settings.model, proto: settings.proto, proxy: !!settings.proxy,
+          name: error?.name, status: error?.status || 0,
+          message: String(error?.message || '').slice(0, 240),
+          zh: String(error?.zh || '').slice(0, 240),
+          url: String(error?.url || '').slice(0, 160), elapsed: error?.elapsed || 0,
+          bytes: error?.bytes || 0, viaProxy: !!error?.viaProxy,
+          contentType: error?.contentType || '', bodyPreview: String(error?.bodyPreview || '').slice(0, 240),
+        }),
+      }).catch(() => {});
+    } catch { /* 诊断失败不影响主流程 */ }
+  }
   $('#cfSave').onclick = () => {
     const next = cfgRead();
     const error = configError(next);
@@ -1352,7 +1419,12 @@
         showCheckpoints($('#cfCheckpoint').value, checkpoints);
         if (!checkpoints.length) return msg('ComfyUI 中还没有可用的 checkpoint', 1);
       }
-      msg('本机引擎已连接');
+      const mode = status.multiRef === 'ipadapter'
+        ? 'IPAdapter 多参考图'
+        : status.multiRef === 'stitch'
+          ? '拼图兜底（结构会残留，建议装 IPAdapter）'
+          : '仅单张参考图';
+      msg(`本机引擎已连接 · ${mode} · 最多 ${status.maxRefs ?? 1} 张`);
     } catch (error) {
       if (!check.signal.aborted) msg(settings.prov === 'local' ? error.message : nice(error), 1);
     } finally {
@@ -1489,8 +1561,7 @@
         try {
           const items = [...batch.persons, ...batch.garments, ...job.set, ...batch.exprs, ...batch.extraRefs];
           const imgs = await Promise.all(items.map(imageFor));
-          signal.throwIfAborted();
-          stage(total > 1 ? `模型正在绘制… 共 ${total} 张` : '模型正在绘制…');
+          signal.throwIfAborted();          stage(total > 1 ? `模型正在绘制… 共 ${total} 张` : '模型正在绘制…');
           W.lastSent = job.prompt;
 
           const request = new AbortController();
@@ -1498,10 +1569,11 @@
           signal.addEventListener('abort', cancel, { once: true });
           let timedOut = false;
           let result;
-          const timer = setTimeout(() => { timedOut = true; request.abort(); }, window.__TMO || 180000);
+          const timer = setTimeout(() => { timedOut = true; request.abort(); }, window.__TMO || 600000);
           try {
             result = await generateImage({
               images: imgs,
+              roles: items.map(refRole),
               prompt: job.prompt,
               signal: request.signal,
               ratio: batch.ar,
@@ -1545,6 +1617,7 @@
         } catch (error) {
           if (signal.aborted) break;
           error.sent = job.prompt;
+          diag(error, settings);
           outcome.errs.push(error);
           failed.push(job);
         } finally {

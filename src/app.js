@@ -11,6 +11,7 @@
   // Kept verbatim so post.py, scripts/preview.mjs, scripts/catalog-source.mjs,
   // and tests/check_csp.py can discover the asset host and all 12 catalog manifests.
   const AH='';
+  window.PoseWearAssetBase = AH;
   const CATALOG_FILES = {
     pose: 'poses.json',
     depth: 'depths.json',

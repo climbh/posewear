@@ -5497,7 +5497,7 @@ html:lang(tr) .st-r .hl:empty::before {
 
 .pk-bar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   margin: 0 24px 10px;
   min-width: 0;
@@ -5520,17 +5520,12 @@ html:lang(tr) .st-r .hl:empty::before {
 
 .pk-cats {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
   min-width: 0;
   flex: 1;
   padding: 1px 2px;
-}
-
-.pk-cats::-webkit-scrollbar {
-  display: none;
 }
 
 .pk-cats .chip {
@@ -5632,7 +5627,7 @@ html:lang(tr) .st-r .hl:empty::before {
 
 .prov {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
   gap: 8px;
 }
 
@@ -5661,6 +5656,8 @@ html:lang(tr) .st-r .hl:empty::before {
   display: block;
   font-size: 13.5px;
   font-weight: 700;
+  /* 窄卡片里长服务名（OpenUncensored）不要溢出到相邻卡片上 */
+  overflow-wrap: anywhere;
 }
 
 .prov small {

@@ -194,7 +194,7 @@ async function check(browser, profile) {
       assert.equal(receivedPrompt,prompt);
       assert.equal(receivedCheckpoint, standard ? checkpoints[1] : 'YOUR_CHECKPOINT.safetensors');
     }
-    assert.deepEqual(requests.filter(r=>!['/system_stats','/object_info/CheckpointLoaderSimple','/v1/models'].includes(r)),
+    assert.deepEqual(requests.filter(r=>!['/system_stats','/v1/models'].includes(r) && !r.startsWith('/object_info/')),
       comfy ? ['/upload/image','/prompt','/history/demo-job','/view'] : ['/v1/images/edits']);
     assert.deepEqual(errors,[]);
     if (standard) console.log('PASS cloud default, local model required, failed connection, live checkpoint selection');

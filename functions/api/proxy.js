@@ -26,7 +26,9 @@ export async function onRequest(ctx){const {request}=ctx;
   const ip=request.headers.get('cf-connecting-ip')||'0';
   const img=request.headers.get('x-proxy-kind')==='image';
   if(img){if(request.method!=='GET')return j(405,'图片下载只支持 GET');
-    if(t.port||!IMG_HOSTS.some(r=>r.test(t.hostname)))return j(403,'该图片地址不在允许范围内');
+    const customImg=request.headers.get('x-proxy-custom')==='1';
+    if(t.port||(!customImg&&!IMG_HOSTS.some(r=>r.test(t.hostname))))return j(403,'该图片地址不在允许范围内');
+    if(customImg&&/^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[)/.test(t.hostname))return j(403,'不能转发到内网地址');
     if(await over(ip,'img',ctx))return j(429,'请求过于频繁，请稍后再试');
     const r=await fetch(t.toString(),{redirect:'manual'}).catch(()=>null);const ct=r&&r.headers.get('content-type')||'';
     if(!r||!r.ok||!/^image\//.test(ct))return j(502,'结果图片下载失败');return new Response(r.body,{headers:{'content-type':ct,'cache-control':'no-store','x-content-type-options':'nosniff'}})}

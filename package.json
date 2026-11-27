@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "build": "python3 build.py",
+    "add": "python3 scripts/add-asset.py",
     "serve": "python3 -m http.server 8787 -d dist",
     "test": "node tests/run.mjs",
     "deploy": "python3 tests/check_csp.py \"${POSEWEAR_STAGING:?Set POSEWEAR_STAGING to a fresh staging copy}\" && cd \"$POSEWEAR_STAGING\" && wrangler pages deploy . --project-name posewear --branch main",

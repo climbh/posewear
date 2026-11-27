@@ -6,7 +6,7 @@
   const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
   const p2 = n => String(n).padStart(2, '0');
   const stamp = d => `${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}-${p2(d.getHours())}${p2(d.getMinutes())}`;
-  const PROV_NAME = { openai: 'OpenAI', gemini: 'Gemini', seedream: '豆包', custom: '自定义' };
+  const PROV_NAME = { openai: 'OpenAI', gemini: 'Gemini', seedream: '豆包', uncensored: 'OpenUncensored', custom: '自定义' };
   const providerName = r => r.prov === 'local' ? (r.model || '本机引擎') : (PROV_NAME[r.prov] || r.prov);
 
   let L = [];

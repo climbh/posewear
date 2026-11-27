@@ -263,8 +263,12 @@ def main(argv=None):
             'zh': zh,
             'en': en,
             'lineEn': LINE[d['系統']][1],
+            # data.json 可选字段 adult：1/0 = 上传时显式指定，None = 按系列/分类推导
+            'adult': d.get('adult'),
             'angles': [],
         })
+        if d.get('adult') is not None:
+            entry['adult'] = d['adult']
         ang = ANG[d['アングル']]
         entry['angles'].append({
             'zh': ang[0],
@@ -285,6 +289,7 @@ def main(argv=None):
             'm': 'c/m/' + d['id'] + '.webp',
             'i': 'c/i/' + os.path.basename(d['画像']),
             'o': 'o/c/' + d['id'] + '.png',
+            'adult': d.get('adult'),
         }
         for d in cd
     ]
@@ -299,6 +304,7 @@ def main(argv=None):
             'm': 'a/m/' + d['id'] + '.webp',
             'i': 'a/i/' + os.path.basename(d['画像']),
             'o': 'o/a/' + d['id'] + '.png',
+            'adult': d.get('adult'),
         }
         for d in ad
     ]
@@ -307,13 +313,18 @@ def main(argv=None):
         poses[key]['cat'] = cat_name
 
     for p in poses.values():
-        if p['line'] in ADULT_LINES or p['cat'] in ADULT_CATS:
+        flag = p.pop('adult', None)
+        if flag is not None:
+            if flag:
+                p['a'] = 1
+        elif p['line'] in ADULT_LINES or p['cat'] in ADULT_CATS:
             p['a'] = 1
-    for c in cos:
-        if c['cat'] in ADULT_COS:
-            c['a'] = 1
-    for c in acs:
-        if c['cat'] in ADULT_COS:
+    for c in cos + acs:
+        flag = c.pop('adult', None)
+        if flag is not None:
+            if flag:
+                c['a'] = 1
+        elif c['cat'] in ADULT_COS:
             c['a'] = 1
 
     os.makedirs(dist_dir, exist_ok=True)
